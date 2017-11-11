@@ -1,5 +1,4 @@
 /apikeys
 *.pyc
-.vim*
-.ssh*
-.bash*
+.*
+
