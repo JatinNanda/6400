@@ -3,7 +3,7 @@ import requests
 import sys
 from datetime import datetime
 
-API_KEY = 'eb55992b723784476d2136c07c5fbfae'
+API_KEY = ''
 REST_END_POINT = 'http://ec2-54-211-108-192.compute-1.amazonaws.com/add_photos'
 
 def getPhotos(lat, lon, location):

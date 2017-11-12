@@ -6,7 +6,7 @@ import sys
 #san francisco = 377
 #paris = 14
 
-API_KEY = 'ttGdToVjLS2oH9Eyzfyg95MmCit8ugdC4d6kvgqY'
+API_KEY = ''
 REST_END_POINT = 'http://ec2-54-211-108-192.compute-1.amazonaws.com/add_points_of_interest'
 
 city = sys.argv[1]
