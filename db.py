@@ -1,7 +1,9 @@
 from flask import Flask
 from flask import request
+from flask import jsonify
 
 import psycopg2
+import psycopg2.extras
 from psycopg2 import sql
 
 app = Flask(__name__)
@@ -25,7 +27,7 @@ def test():
   return "Successfully inserted meme."
 
 @app.route('/add_points_of_interest', methods=['POST'])
-def add_cities():
+def add_points_of_interest():
   conn = connect()
   cur = conn.cursor()
   points = request.json
@@ -47,15 +49,33 @@ def add_photos():
   parsed_photos = [(p['URL'], p['Date'], p['Time'], p['Popularity'], p['POI_Name']) for p in photos]
 
   args_str = ','.join(cur.mogrify("(%s, %s, %s, %s, %s)", photo) for photo in parsed_photos)
-  cur.execute("INSERT INTO photo(url, date_taken, time_taken, popularity, POI_name) VALUES "  + args_str)
+  cur.execute("INSERT INTO photo(url, date_taken, time_taken, popularity, depicted_POI_name) VALUES "  + args_str)
   conn.commit()
   conn.close()
 
   return "Successfully inserted photos."
 
-# city post endpoint
+@app.route('/add_cities', methods=['POST'])
+def add_cities():
+  conn = connect()
+  cur = conn.cursor()
+  cities = request.json
+  parsed_cities = [(c['ID'], c['Name'], c['Country']) for c in cities]
 
-# return places of interest, joined with city
+  args_str = ','.join(cur.mogrify("(%s, %s, %s)", city) for city in parsed_cities)
+  cur.execute("INSERT INTO city(id, city_name, country) VALUES "  + args_str)
+  conn.commit()
+  conn.close()
+
+@app.route('/get_markers', methods=['GET'])
+def get_markers():
+  conn = connect()
+  cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+  # return places of interest joined with city for initial marker population
+  cur.execute("SELECT * FROM points_of_interest JOIN city on city_id = id")
+  dict_res = cur.fetchall()
+  conn.close()
+  return jsonify(dict_res)
 
 #get route that takes in time, lat long bounding box and returns pictures sorted by popularity for that region, limited to some number
 
