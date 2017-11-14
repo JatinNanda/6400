@@ -3,7 +3,8 @@ import requests
 import sys
 from datetime import datetime
 
-API_KEY = ''
+with open('API_keys/flickr_keys.json') as key_file:
+    API_KEY = json.load(key_file)['key']
 REST_END_POINT = 'http://ec2-54-211-108-192.compute-1.amazonaws.com/add_photos'
 
 def getPhotos(lat, lon, location):
@@ -45,11 +46,11 @@ for i in range(len(poiList)):
 	photos = getPhotos(lat, lon, currentPOI['Name'])
 	response = requests.post(REST_END_POINT,json=photos)
 	print(response)
-	
+
 #with open("PicData.json", 'w') as output_file:
 #	json.dump(photos, output_file)
 
-response = requests.post('http://ec2-54-211-108-192.compute-1.amazonaws.com/add_photos',json=photos)
+#response = requests.post('http://ec2-54-211-108-192.compute-1.amazonaws.com/add_photos',json=photos)
 
 #print(response)
 

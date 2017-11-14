@@ -31,9 +31,7 @@ def add_points_of_interest():
   conn = connect()
   cur = conn.cursor()
   points = request.json
-  print len(points)
-  parsed_points = [(i, p['Name'], " ".join(p['Type']), p['Description'], p['Latitude'], p['Longitude'], p['City_ID']) for i, p in enumerate(points)]
-
+  parsed_points = [(p['Name'], " ".join(p['Type']), p['Description'], p['Latitude'], p['Longitude'], p['City_ID']) for i, p in enumerate(points)]
   args_str = ','.join(cur.mogrify("(%s, %s, %s, %s, %s, %s)", poi) for poi in parsed_points)
   cur.execute("INSERT INTO points_of_interest VALUES "  + args_str)
   conn.commit()
@@ -67,6 +65,8 @@ def add_cities():
   conn.commit()
   conn.close()
 
+  return  "Successfully added cities"
+
 @app.route('/get_markers', methods=['GET'])
 def get_markers():
   conn = connect()
@@ -78,6 +78,21 @@ def get_markers():
   return jsonify(dict_res)
 
 #get route that takes in time, lat long bounding box and returns pictures sorted by popularity for that region, limited to some number
+@app.route('/get_photos', methods=['GET'])
+def get_photos():
+    args = request.args.to_dict()
+    lim = args['limit'] or 20
+    min_lat = args['min_lat']
+    max_lat = args['min_lat']
+    min_lng = args['min_lng']
+    max_lng = args['max_lng']
+    if min_lat is None or max_lat is None or min_lng is None or max_lng is None:
+        return None
+
+    conn = connect()
+    cur = conn.cursor()
+
+    return jsonify(request.args.to_dict())
 
 if __name__ == '__main__':
     app.run(debug=True, port = 80, host = '0.0.0.0')

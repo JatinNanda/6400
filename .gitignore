@@ -1,4 +1,5 @@
-/apikeys
+data_scripts/API_KEYS
 *.pyc
+*.json
 .*
 

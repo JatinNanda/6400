@@ -6,7 +6,8 @@ import sys
 #san francisco = 377
 #paris = 14
 
-API_KEY = ''
+with open('API_keys/poi_keys.json') as key_file:
+    API_KEY = json.load(key_file)['key']
 REST_END_POINT = 'http://ec2-54-211-108-192.compute-1.amazonaws.com/add_points_of_interest'
 
 city = sys.argv[1]
@@ -31,7 +32,7 @@ for i in range(len(data)):
 #	poiDict =  dict((k, data[i][k]) for k in ('name', 'parent_ids', 'location', 'categories', 'perex'))
 	poiList.append(poiDict)
 
-#print(poiList)
+print poiList[0]
 
 with open('POIdata.json', 'w') as outfile:
 	json.dump(poiList, outfile)
