@@ -37,7 +37,7 @@ def getPhotos(lat, lon, location):
 cities = []
 countries = {}
 
-response = requests.get('https://api.sygictravelapi.com/1.0/en/places/list', params={'level':'city', 'limit':3}, headers={'x-api-key':API_KEY_SYGIC})
+response = requests.get('https://api.sygictravelapi.com/1.0/en/places/list', params={'level':'city', 'limit':100}, headers={'x-api-key':API_KEY_SYGIC})
 data = response.json().get('data').get('places')
 
 for i in range(len(data)):
