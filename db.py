@@ -77,6 +77,15 @@ def get_markers():
   conn.close()
   return jsonify(dict_res)
 
+@app.route('/get_photo_count', methods=['GET'])
+def get_photo_count():
+  conn = connect()
+  cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+  cur.execute("SELECT count(*) FROM photo")
+  dict_res = cur.fetchall()
+  conn.close()
+  return jsonify(dict_res)
+
 #get route that takes in time, lat long bounding box and returns pictures sorted by popularity for that region, limited to some number
 @app.route('/get_photos', methods=['GET'])
 def get_photos():
@@ -88,7 +97,7 @@ def get_photos():
     max_lng = args['max_lng']
     if min_lat is None or max_lat is None or min_lng is None or max_lng is None:
         return None
-
+    #cur.execute("SELECT * FROM")
     conn = connect()
     cur = conn.cursor()
 

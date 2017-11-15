@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS points_of_interest (
   longitude float NOT NULL,
   latitude float NOT NULL,
   city_id int NOT NULL,
-  PRIMARY KEY (POI_name)
+  PRIMARY KEY (POI_name, city_id)
 );
 
 CREATE TABLE IF NOT EXISTS photo (
