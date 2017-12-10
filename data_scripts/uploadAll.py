@@ -15,7 +15,12 @@ REST_END_POINT_PHOTOS = 'http://ec2-54-211-108-192.compute-1.amazonaws.com/add_p
 
 def getPhotos(lat, lon, location):
 	response = requests.get('https://api.flickr.com/services/rest/?method=flickr.photos.search', params={'api_key':API_KEY_FLICKR, 'lat':lat, 'lon':lon, 'radius':.10, 'format':'json','sort':'interestingness-desc','nojsoncallback':1, 'extras':'date_taken,views', 'per_page' : 200})
-	orig_photos = response.json()['photos']['photo']
+        try:
+            orig_photos = response.json()['photos']['photo']
+        except:
+            print "Random failure...going to try again."
+            return getPhotos(lat, lon, location)
+
 	photos = []
 	for i in range(len(orig_photos)):
 		currentPhoto = orig_photos[i]
@@ -26,8 +31,11 @@ def getPhotos(lat, lon, location):
 
 		photoDict['POI_Name'] = location
 		photoDict['Popularity'] = currentPhoto['views']
-		photoDict['Date'] =  dt.strftime('%Y-%m-%d')
-		photoDict['Time'] = dt.strftime('%H:%M:%S')
+                try:
+                    photoDict['Date'] =  dt.strftime('%Y-%m-%d')
+                    photoDict['Time'] = dt.strftime('%H:%M:%S')
+                except:
+                    continue
 		photoDict['URL'] = 'https://farm{}.staticflickr.com/{}/{}_{}.jpg'.format(currentPhoto['farm'], currentPhoto['server'], currentPhoto['id'], currentPhoto['secret'])
 
 		photos.append(photoDict)
@@ -37,7 +45,7 @@ def getPhotos(lat, lon, location):
 cities = []
 countries = {}
 
-response = requests.get('https://api.sygictravelapi.com/1.0/en/places/list', params={'level':'city', 'limit':100}, headers={'x-api-key':API_KEY_SYGIC})
+response = requests.get('https://api.sygictravelapi.com/1.0/en/places/list', params={'level':'city', 'limit':20}, headers={'x-api-key':API_KEY_SYGIC})
 data = response.json().get('data').get('places')
 
 for i in range(len(data)):
@@ -59,11 +67,10 @@ if len(sys.argv) > 1:
 		response = requests.post(REST_END_POINT_CITIES,json=cities)
 		print(response)
 
-
 for j in range(len(cities)):
 
 	city = cities[j]['ID']
-	num_results = 100
+	num_results = 5
 
 	response = requests.get('https://api.sygictravelapi.com/1.0/en/places/list', params={'parents':'city:' + str(city), 'level':'poi', 'limit':num_results}, headers={'x-api-key':API_KEY_SYGIC})
 
@@ -85,7 +92,6 @@ for j in range(len(cities)):
 		poiList.append(poiDict)
 
 		#print(poiList)
-
 	if len(sys.argv) > 2:
 			post = sys.argv[2]
 			if (post == 'YES'):
@@ -95,7 +101,8 @@ for j in range(len(cities)):
 	if len(sys.argv) > 3 and sys.argv[3] == 'YES':
 		for k in range(len(poiList)):
 			photos = []
-			currentPOI = poiList[i]
+			currentPOI = poiList[k]
+			print "Adding photos for " + str(currentPOI)
 			lat = currentPOI['Latitude']
 			lon = currentPOI['Longitude']
 			photos = getPhotos(lat, lon, currentPOI['Name'])

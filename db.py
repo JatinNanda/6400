@@ -1,6 +1,7 @@
 from flask import Flask
 from flask import request
-from flask import jsonify
+from flask.ext.jsonpify import jsonify
+import json
 
 import psycopg2
 import psycopg2.extras
@@ -67,15 +68,75 @@ def add_cities():
 
   return  "Successfully added cities"
 
-@app.route('/get_markers', methods=['GET'])
-def get_markers():
+def get_display_for_city(city_id):
   conn = connect()
   cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
   # return places of interest joined with city for initial marker population
-  cur.execute("SELECT * FROM points_of_interest JOIN city on city_id = id")
+  cur.execute("SELECT * FROM points_of_interest poi JOIN photo p on p.depicted_poi_name = poi.poi_name where poi.city_id = (%s) and p.url = (SELECT url from photo where poi.poi_name = depicted_poi_name order by popularity DESC limit 1)", (city_id,))
+  dict_res = cur.fetchall()
+  for instance in dict_res:
+      instance['date_taken'] = str(instance['date_taken'])
+      instance['time_taken'] = str(instance['time_taken'])
+  conn.close()
+  return dict_res
+
+def get_city_locs():
+  conn = connect()
+  cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+  # return initial set of cities with their approimate center latitude and longitude
+  cur.execute("SELECT city_name, id, AVG(p.latitude) as latitude, AVG(p.longitude) as longitude FROM city JOIN points_of_interest p on city.id = p.city_id group by city_name, id")
   dict_res = cur.fetchall()
   conn.close()
-  return jsonify(dict_res)
+  return dict_res
+
+@app.route('/get_city_info', methods=['GET'])
+def get_city_info():
+    return jsonify(get_city_locs())
+
+@app.route('/get_city_photos', methods=['GET'])
+def get_city_photos():
+    target_city = request.args['city']
+    return jsonify(get_display_for_city(target_city))
+
+@app.route('/get_filtered_photos', methods=['GET'])
+def get_filtered_photos():
+    target_poi = request.args['poi']
+    target_time = request.args['time']
+    target_season = request.args['season']
+
+    times = None
+    months = None
+
+    print target_poi
+    print target_time
+    print target_season
+
+    if target_season == 'Summer':
+        months = (6, 7, 8)
+    elif target_season == 'Fall':
+        months = (9, 10, 11)
+    elif target_season == 'Winter':
+        months = (12, 1, 2)
+    else:
+        months = (3, 4, 5)
+
+    if target_time == 'All':
+        hours = tuple(range(0, 24))
+    elif target_time == 'Day':
+        hours = tuple(range(7, 18))
+    else:
+        hours = tuple(range(18, 24)) + tuple(range(0, 7))
+
+    conn = connect()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    # return places of interest joined with city for initial marker population
+    cur.execute("SELECT * FROM points_of_interest poi JOIN photo p on p.depicted_poi_name = poi.poi_name where poi.poi_name = %s and date_part('month', p.date_taken) in %s and date_part('hour', p.time_taken) in %s order by popularity DESC limit 9", (target_poi, months, hours))
+    dict_res = cur.fetchall()
+    for instance in dict_res:
+        instance['date_taken'] = str(instance['date_taken'])
+        instance['time_taken'] = str(instance['time_taken'])
+    conn.close()
+    return jsonify(dict_res)
 
 @app.route('/get_photo_count', methods=['GET'])
 def get_photo_count():
@@ -85,23 +146,6 @@ def get_photo_count():
   dict_res = cur.fetchall()
   conn.close()
   return jsonify(dict_res)
-
-#get route that takes in time, lat long bounding box and returns pictures sorted by popularity for that region, limited to some number
-@app.route('/get_photos', methods=['GET'])
-def get_photos():
-    args = request.args.to_dict()
-    lim = args['limit'] or 20
-    min_lat = args['min_lat']
-    max_lat = args['min_lat']
-    min_lng = args['min_lng']
-    max_lng = args['max_lng']
-    if min_lat is None or max_lat is None or min_lng is None or max_lng is None:
-        return None
-    #cur.execute("SELECT * FROM")
-    conn = connect()
-    cur = conn.cursor()
-
-    return jsonify(request.args.to_dict())
 
 if __name__ == '__main__':
     app.run(debug=True, port = 80, host = '0.0.0.0')
